@@ -1,11 +1,29 @@
+// ignore_for_file: use_build_context_synchronously
+
+
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 const backendBaseUrl = 'http://localhost:3000';
 
-void main() {
-  runApp(const MainApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await LiquidGlassWidgets.initialize();
+
+  runApp(
+    LiquidGlassWidgets.wrap(
+      child: const MainApp(),
+      adaptiveQuality: true, // auto-benchmarks device, degrades gracefully
+      theme: GlassThemeData.simple(
+        // optional app-wide glass defaults
+        blur: 10,
+        thickness: 30,
+        quality: GlassQuality.premium,
+      ),
+    ),
+  );
 }
 
 class MainApp extends StatelessWidget {
@@ -15,7 +33,6 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Login Demo',
-      theme: ThemeData(primarySwatch: Colors.blue),
       // The first screen shown is the login page.
       home: const LoginPage(),
     );
@@ -72,9 +89,11 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
-      body: Padding(
+    return GlassScaffold(
+      background: Image.asset('../assets/wallpaper2.jpg', fit: BoxFit.cover),
+      appBar: GlassAppBar(title: const Text('Login')),
+      statusBarStyle: GlassStatusBarStyle.light,
+      body: GlassContainer(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -86,27 +105,40 @@ class _LoginPageState extends State<LoginPage> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
-            TextField(
+            GlassTextField(
               controller: _usernameController,
-              decoration: const InputDecoration(
-                labelText: 'Username',
-                border: OutlineInputBorder(),
-              ),
+              placeholder: 'Username2',
             ),
             const SizedBox(height: 16),
-            TextField(
+            GlassTextField(
               controller: _passwordController,
-              decoration: const InputDecoration(
-                labelText: 'Password',
-                border: OutlineInputBorder(),
-              ),
+              placeholder: "Password2",
               obscureText: true,
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _attemptLogin,
-              child: const Text('เข้าสู่ระบบ'),
+
+            GlassButton.custom(
+              onTap: _attemptLogin,
+              shape: LiquidRoundedRectangle(borderRadius: 12),
+              glowHitTestBehavior: HitTestBehavior.translucent,
+              style: GlassButtonStyle.filled,
+              ambientBaseLight: 0.08,
+              child: Text('Login'),
             ),
+
+            // GlassButton(
+            //   settings: LiquidGlassSettings(
+                
+            //   ),
+            //   enabled: true,
+            //   icon: Icon(Icons.play_arrow),
+            //   onTap: _attemptLogin,
+            //   label: 'Login',
+            //   iconColor: Colors.greenAccent,
+            //   style: GlassButtonStyle.filled,
+            //   glowHitTestBehavior: HitTestBehavior.opaque,
+            //   shape: LiquidRoundedRectangle(borderRadius: 12),
+            // ),
             if (_errorMessage != null) ...[
               const SizedBox(height: 12),
               Text(
@@ -329,13 +361,14 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Habit Tracker'),
-        automaticallyImplyLeading: false,
+    return GlassScaffold(
+      background: Image.asset('../assets/wallpaper2.jpg', fit: BoxFit.cover),
+      appBar: GlassAppBar(
+        title: const Text('LiquidGlass Test'),
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: _loadHabits),
         ],
+        preferredSize: const Size.fromHeight(60.0),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -356,11 +389,12 @@ class _HomePageState extends State<HomePage> {
           : _habits.isEmpty
           ? const Center(child: Text('ยังไม่มีรายการ'))
           : ListView.builder(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.only(top: 60.0, left: 16.0, right: 16.0),
               itemCount: _habits.length,
               itemBuilder: (context, index) {
                 final habit = _habits[index];
-                return Card(
+                return GlassCard(
+                  margin: EdgeInsetsDirectional.only(bottom: 20),
                   child: InkWell(
                     onTap: () => _showDetailDialog(habit),
                     child: CheckboxListTile(
@@ -375,8 +409,7 @@ class _HomePageState extends State<HomePage> {
                 );
               },
             ),
-      floatingActionButton: AddButton(onPressed: _showAddDialog),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: GlassButton(onTap: _showAddDialog, icon: Icon(Icons.add),),
     );
   }
 }
